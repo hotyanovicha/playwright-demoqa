@@ -24,3 +24,11 @@ test('Submit Text Box Form with invalid email', async ({page}) =>{
     await elementsPage.fillTextBoxForm(testData);
     await elementsPage.submitTextBoxForm();
 })
+
+test('Submit Text Box Form with empty form', async ({page}) =>{
+    const elementsPage = new ElementsPage(page);
+    await elementsPage.openTextBoxPage();
+    const testData = TextBoxDataGenerator.create({email: ''});
+    await elementsPage.fillTextBoxForm(testData);
+    await elementsPage.submitTextBoxForm();
+})
