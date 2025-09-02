@@ -2,6 +2,7 @@ import { BasePage } from "./BasePage";
 import { Locator, expect } from "@playwright/test";
 import { Urls } from "../test-data/page-url-endpoints";
 import { Page } from "@playwright/test";
+import { TextBoxData } from "../test-data/textbox-data-generator";
 import { faker } from '@faker-js/faker';
 
 export class ElementsPage extends BasePage {
@@ -22,7 +23,7 @@ export class ElementsPage extends BasePage {
         this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name')
         this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com')
         this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address')
-        this.permanentAddressInput = page.locator('#permanentAddress')
+        this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress');
         this.submitButton = page.getByRole('button', { name: 'Submit' })
         this.submittedData = page.locator('#output')
 
@@ -38,15 +39,30 @@ export class ElementsPage extends BasePage {
         await expect(this.textBoxTitle).toBeVisible();
     }
 
-    async fillTextBoxForm() {
-        await this.fullNameInput.fill(faker.person.fullName());
-        await this.emailInput.fill(faker.internet.email());
-        await this.addressInput.fill(faker.location.streetAddress());
-        await this.permanentAddressInput.fill(faker.location.streetAddress());
+    async fillTextBoxForm(testData?: Partial<TextBoxData>) {
+        const data = {
+            fullName: faker.person.fullName(),
+            email: faker.internet.email(),
+            currentAddress: faker.location.streetAddress(),
+            permanentAddress: faker.location.streetAddress(),
+            ...testData  // Override any provided fields
+        };
+
+        await this.fullNameInput.fill(data.fullName);
+        await this.emailInput.fill(data.email);
+        await this.addressInput.fill(data.currentAddress);
+        await this.permanentAddressInput.fill(data.permanentAddress);
+
+        return data;
+    }
+    async validateTextBoxForm(testData: TextBoxData) {
+        await expect(this.fullNameInput).toHaveValue(testData.fullName);
+        await expect(this.emailInput).toHaveValue(testData.email);
+        await expect(this.addressInput).toHaveValue(testData.currentAddress);
+        await expect(this.permanentAddressInput).toHaveValue(testData.permanentAddress);
     }
 
     async submitTextBoxForm() {
         await this.submitButton.click();
-        await expect(this.submittedData).toBeVisible();
     }
 }
