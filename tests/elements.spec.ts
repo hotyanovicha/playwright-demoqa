@@ -2,27 +2,44 @@ import { test, expect } from '@playwright/test';
 import { ElementsPage } from '../page/ElementsPage';
 import { TextBoxDataGenerator } from '../test-data/textbox-data-generator';
 
-test('Open Elements Page', async ({ page }) => {
-    const elementsPage = new ElementsPage(page);
-    await elementsPage.openTextBoxPage();
-});
+// Test suite for DemoQA Elements functionality
+test.describe('Elements Page Tests', () => {
+    test('Should open and display Text Box page correctly', async ({ page }) => {
+        const elementsPage = new ElementsPage(page);
+        
+        await elementsPage.openTextBoxPage();
+        await elementsPage.expectTextBoxPageVisible();
+  
+    });
 
-test('Submit Text Box Form', async ({page}) =>{
-    const elementsPage = new ElementsPage(page);
-    await elementsPage.openTextBoxPage();
+    test('Should successfully submit valid Text Box form data', async ({ page }) => {
+        const elementsPage = new ElementsPage(page);
+        await elementsPage.openTextBoxPage();
+        await elementsPage.expectTextBoxPageVisible();
 
-    const testData = TextBoxDataGenerator.create();
-    await elementsPage.fillTextBoxForm(testData);
-    await elementsPage.submitTextBoxForm();
-    await elementsPage.validateTextBoxForm(testData);
-})
+        const testData = TextBoxDataGenerator.create();
+        
+        // Fill and validate form before submission
+        await elementsPage.fillTextBoxForm(testData);
+        await elementsPage.validateTextBoxFormData(testData);
+        
+        // Submit form and validate results
+        await elementsPage.submitTextBoxForm();
+        await elementsPage.validateSubmittedData(testData);
+    });
 
-test('Submit Text Box Form with invalid email', async ({page}) =>{
-    const elementsPage = new ElementsPage(page);
-    await elementsPage.openTextBoxPage();
-    const testData = TextBoxDataGenerator.create({email: 'invalid-email'});
-    await elementsPage.fillTextBoxForm(testData);
-    await elementsPage.submitTextBoxForm();
+    test('Should handle invalid email format gracefully', async ({ page }) => {
+        const elementsPage = new ElementsPage(page);
+        await elementsPage.openTextBoxPage();
+        await elementsPage.expectTextBoxPageVisible();
+
+        const testData = TextBoxDataGenerator.create({ email: 'invalid-email' });
+        await elementsPage.fillTextBoxForm(testData);
+        await elementsPage.submitTextBoxForm();
+
+    });
+
+
 })
 
 test('Submit Text Box Form with empty form', async ({page}) =>{
