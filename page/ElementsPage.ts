@@ -39,21 +39,13 @@ export class ElementsPage extends BasePage {
         await expect(this.textBoxTitle).toBeVisible();
     }
 
-    async fillTextBoxForm(testData?: Partial<TextBoxData>) {
-        const data = {
-            fullName: faker.person.fullName(),
-            email: faker.internet.email(),
-            currentAddress: faker.location.streetAddress(),
-            permanentAddress: faker.location.streetAddress(),
-            ...testData  // Override any provided fields
-        };
-
-        await this.fullNameInput.fill(data.fullName);
-        await this.emailInput.fill(data.email);
-        await this.addressInput.fill(data.currentAddress);
-        await this.permanentAddressInput.fill(data.permanentAddress);
-
-        return data;
+    async fillTextBoxForm(testData: TextBoxData) {
+        await this.fullNameInput.fill(testData.fullName);
+        await this.emailInput.fill(testData.email);
+        await this.addressInput.fill(testData.currentAddress);
+        await this.permanentAddressInput.fill(testData.permanentAddress);
+        
+        return testData;
     }
     async validateTextBoxForm(testData: TextBoxData) {
         await expect(this.fullNameInput).toHaveValue(testData.fullName);
