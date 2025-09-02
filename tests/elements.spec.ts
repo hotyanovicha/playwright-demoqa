@@ -9,7 +9,15 @@ test('Open Elements Page', async ({ page }) => {
 test('Submit Text Box Form', async ({page}) =>{
     const elementsPage = new ElementsPage(page);
     await elementsPage.openTextBoxPage();
-    await elementsPage.fillTextBoxForm();
+    const testData = await elementsPage.fillTextBoxForm();
     await elementsPage.submitTextBoxForm();
+    await elementsPage.validateTextBoxForm(testData);
 })
 
+
+test('Submit Text Box Form with invalid email', async ({page}) =>{
+    const elementsPage = new ElementsPage(page);
+    await elementsPage.openTextBoxPage();
+    await elementsPage.fillTextBoxForm({email: 'invalid-email'});
+    await elementsPage.submitTextBoxForm();
+})
