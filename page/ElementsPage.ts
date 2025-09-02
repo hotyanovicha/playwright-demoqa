@@ -38,11 +38,14 @@ export class ElementsPage extends BasePage {
         await expect(this.textBoxTitle).toBeVisible();
     }
 
-    async submitTextBoxForm() {
+    async fillTextBoxForm() {
         await this.fullNameInput.fill(faker.person.fullName());
         await this.emailInput.fill(faker.internet.email());
         await this.addressInput.fill(faker.location.streetAddress());
         await this.permanentAddressInput.fill(faker.location.streetAddress());
+    }
+
+    async submitTextBoxForm() {
         await this.submitButton.click();
         await expect(this.submittedData).toBeVisible();
     }

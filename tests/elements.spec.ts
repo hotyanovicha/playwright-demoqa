@@ -9,6 +9,7 @@ test('Open Elements Page', async ({ page }) => {
 test('Submit Text Box Form', async ({page}) =>{
     const elementsPage = new ElementsPage(page);
     await elementsPage.openTextBoxPage();
+    await elementsPage.fillTextBoxForm();
     await elementsPage.submitTextBoxForm();
 })
 

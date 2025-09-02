@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+---
+
+# Development Guidelines
+
+## Keep It Simple, Stupid (KISS)
+
+### ⚠️ DO NOT OVERENGINEER
+
+This project should focus on **practical, working solutions** rather than enterprise-level complexity.
+
+### For DemoQA Elements Testing:
+
+- Basic page object with essential selectors
+- Simple navigation methods
+- Clear, readable test cases
+- Focus on functionality, not architecture
+
+### Red Flags (Stop and Simplify):
+
+- ❌ Creating multiple utility classes upfront
+- ❌ Complex inheritance hierarchies
+- ❌ Over-abstracted configuration
+- ❌ Testing every possible edge case initially
+- ❌ Building for "future requirements" 
+
+### Green Lights (Good to Go):
+
+- ✅ Direct, working solutions
+- ✅ Clear, readable code
+- ✅ Focused on current requirements
+- ✅ Easy to understand and modify
+- ✅ Gets the job done efficiently
+
+**Remember: Perfect is the enemy of good. Ship working code first.**
+# Development Guidelines
+
+## Keep It Simple, Stupid (KISS)
+
+### ⚠️ DO NOT OVERENGINEER
+
+This project should focus on **practical, working solutions** rather than enterprise-level complexity.
+
+### For DemoQA Elements Testing:
+
+- Basic page object with essential selectors
+- Simple navigation methods
+- Clear, readable test cases
+- Focus on functionality, not architecture
+
+### Red Flags (Stop and Simplify):
+
+- ❌ Creating multiple utility classes upfront
+- ❌ Complex inheritance hierarchies
+- ❌ Over-abstracted configuration
+- ❌ Testing every possible edge case initially
+- ❌ Building for "future requirements" 
+
+### Green Lights (Good to Go):
+
+- ✅ Direct, working solutions
+- ✅ Clear, readable code
+- ✅ Focused on current requirements
+- ✅ Easy to understand and modify
+- ✅ Gets the job done efficiently
+
+**Remember: Perfect is the enemy of good. Ship working code first.**
