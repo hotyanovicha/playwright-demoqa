@@ -45,15 +45,12 @@ export class ElementsPage extends BasePage {
         await expect(this.page).toHaveURL(Urls.elements);
     }
     
-    async expectElementsPageVisible() {
-        await expect(this.page).toHaveURL(Urls.elements);
-    }
-
     async openTextBoxPage() {
         await test.step('Open Text Box Page', async () => {
         await this.openElementsPage();
         await this.expectElementsPageVisible(); //is it okay approach?
         await this.textBoxButton.click();
+    })}
 
     async expectTextBoxPageVisible() {
         await expect(this.textBoxTitle).toBeVisible();
@@ -80,11 +77,7 @@ export class ElementsPage extends BasePage {
     
     async validateSubmittedData(testData: TextBoxData) {
         await test.step('Validate Text Box Form', async () => {
-    }
-    
-    async validateSubmittedData(testData: TextBoxData) {
-  
-        // Validate submitted data with proper text matching
+          // Validate submitted data with proper text matching
         await expect(this.receivedFullName).toContainText(testData.fullName);
         await expect(this.receivedEmail).toContainText(testData.email);
         await expect(this.receivedAddress).toContainText(testData.currentAddress);

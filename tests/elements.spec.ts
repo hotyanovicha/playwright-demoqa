@@ -10,7 +10,7 @@ test.describe('Elements Page Tests', () => {
         await elementsPage.openTextBoxPage();
         await elementsPage.expectTextBoxPageVisible();
   
-    });
+})});
 
     test('Should successfully submit valid Text Box form data', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
