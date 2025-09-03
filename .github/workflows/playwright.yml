@@ -49,100 +49,11 @@ jobs:
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Checkout gh-pages branch
-        run: |
-          git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages
-          git checkout gh-pages
-          
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
           name: playwright-report-${{ github.run_number }}
-          path: temp-report/
-          
-      - name: Create run directory and manage cleanup
-        run: |
-          # Create run directory with timestamp and run number
-          RUN_DIR="run-${{ github.run_number }}-$(date +%Y%m%d-%H%M%S)"
-          mkdir -p "$RUN_DIR"
-          cp -r temp-report/* "$RUN_DIR/"
-          rm -rf temp-report
-          
-          # Keep only the 5 most recent runs
-          ls -dt run-* 2>/dev/null | tail -n +6 | xargs rm -rf || true
-          
-          # Generate index.html with links to all runs
-          cat > index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Playwright Test Reports</title>
-              <style>
-                  body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-                  .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                  h1 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
-                  .run-item { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #fafafa; }
-                  .run-item a { text-decoration: none; color: #2196F3; font-weight: bold; font-size: 16px; }
-                  .run-item a:hover { color: #0056b3; }
-                  .run-meta { color: #666; font-size: 14px; margin-top: 5px; }
-                  .latest { border-left: 4px solid #4CAF50; }
-                  .badge { display: inline-block; background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <h1>🎭 Playwright Test Reports</h1>
-                  <p>Latest test runs (keeping 5 most recent):</p>
-          EOF
-          
-          # Add run links to index.html (sorted by newest first)
-          FIRST_RUN=true
-          for run_dir in $(ls -dt run-* 2>/dev/null); do
-              if [ "$FIRST_RUN" = true ]; then
-                  echo "        <div class=\"run-item latest\">" >> index.html
-                  FIRST_RUN=false
-              else
-                  echo "        <div class=\"run-item\">" >> index.html
-              fi
-              
-              # Extract run number and timestamp from directory name
-              RUN_NUM=$(echo "$run_dir" | sed 's/run-\([0-9]*\)-.*/\1/')
-              TIMESTAMP=$(echo "$run_dir" | sed 's/run-[0-9]*-\(.*\)/\1/')
-              FORMATTED_TIME=$(echo "$TIMESTAMP" | sed 's/\([0-9]\{8\}\)-\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1 \2:\3:\4/')
-              
-              if [ "$run_dir" = "$(ls -dt run-* 2>/dev/null | head -1)" ]; then
-                  echo "            <a href=\"$run_dir/index.html\">Run #$RUN_NUM <span class=\"badge\">LATEST</span></a>" >> index.html
-              else
-                  echo "            <a href=\"$run_dir/index.html\">Run #$RUN_NUM</a>" >> index.html
-              fi
-              echo "            <div class=\"run-meta\">📅 $FORMATTED_TIME</div>" >> index.html
-              echo "        </div>" >> index.html
-          done
-          
-          cat >> index.html << 'EOF'
-              </div>
-          </body>
-          </html>
-          EOF
-          
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Add test report for run #${{ github.run_number }}"
-            git push origin gh-pages
-          fi
+          path: playwright-report/
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -150,7 +61,7 @@ jobs:
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./
+          path: playwright-report/
           
       - name: Deploy to GitHub Pages
         id: deployment
