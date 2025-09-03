@@ -45,5 +45,23 @@ test('Submit Text Box Form with empty form', async ({page}) =>{
     const testData = TextBoxDataGenerator.create({email: ''});
     await elementsPage.fillTextBoxForm(testData);
     await elementsPage.submitTextBoxForm();
+    
 
-})
+});
+
+test('Should fill all Text Box fields with spaces (20 spaces each)', async ({ page }) => {
+    const elementsPage = new ElementsPage(page);
+    await elementsPage.openTextBoxPage();
+    await elementsPage.expectTextBoxPageVisible();
+
+    const spacesData = ' '.repeat(20);
+    const testData = TextBoxDataGenerator.create({
+        fullName: spacesData,
+        email: spacesData,
+        currentAddress: spacesData,
+        permanentAddress: spacesData
+    });
+    
+    await elementsPage.fillTextBoxForm(testData);
+    await elementsPage.submitTextBoxForm();
+});
