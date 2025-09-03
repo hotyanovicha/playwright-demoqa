@@ -76,10 +76,6 @@ export class ElementsPage extends BasePage {
     
     async validateSubmittedData(testData: TextBoxData) {
         await test.step('Validate Text Box Form', async () => {
-<<<<<<< HEAD
-=======
-     
->>>>>>> 23b4025 (Improve log)
         // Validate submitted data with proper text matching
         await expect(this.receivedFullName).toContainText(testData.fullName);
         await expect(this.receivedEmail).toContainText(testData.email);
