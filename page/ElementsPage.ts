@@ -20,19 +20,19 @@ export class ElementsPage extends BasePage {
 
     constructor(page: Page) {
         super(page);
-        this.textBoxButton = page.locator('span.text', { hasText: 'Text Box' })
-        this.textBoxTitle = page.getByRole('heading', { name: 'Text Box'})
+        this.textBoxButton = page.locator('span.text', { hasText: 'Text Box' }).describe('Text Box Button')
+        this.textBoxTitle = page.getByRole('heading', { name: 'Text Box'}).describe('Text Box Title')
         this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name')
-        this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com')
+        this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com').describe('Email Input')
         this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address')
         this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress');
-        this.submitButton = page.getByRole('button', { name: 'Submit' })
+        this.submitButton = page.getByRole('button', { name: 'Submit' }).describe('Submit Button')
         
         // Fixed selectors for output validation - using text content, not placeholders
-        this.receivedFullName = page.locator('#output #name')
-        this.receivedEmail = page.locator('#output #email')
-        this.receivedAddress = page.locator('#output #currentAddress')
-        this.receivedPermanentAddress = page.locator('#output #permanentAddress')
+        this.receivedFullName = page.locator('#output #name').describe('Received Full Name')
+        this.receivedEmail = page.locator('#output #email').describe('Received Email')
+        this.receivedAddress = page.locator('#output #currentAddress').describe('Received Address')
+        this.receivedPermanentAddress = page.locator('#output #permanentAddress').describe('Received Permanent Address')
 
     }
 
