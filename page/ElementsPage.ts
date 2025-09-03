@@ -1,9 +1,8 @@
 import { BasePage } from "./BasePage";
 import { Locator, expect } from "@playwright/test";
 import { Urls } from "../test-data/page-url-endpoints";
-import { Page } from "@playwright/test";
+import { Page, test } from "@playwright/test";
 import { TextBoxData } from "../test-data/textbox-data-generator";
-import { faker } from '@faker-js/faker';
 
 export class ElementsPage extends BasePage {
 
@@ -30,31 +29,41 @@ export class ElementsPage extends BasePage {
     }
 
     async openElementsPage() {
+        await test.step('Open Elements Page', async () => {
         await this.navigateTo(Urls.elements);
+        });
     }
 
     async openTextBoxPage() {
+        await test.step('Open Text Box Page', async () => {
         await this.openElementsPage();
-        await this.textBoxButton.click();
-        await expect(this.textBoxTitle).toBeVisible();
+            await this.textBoxButton.click();
+            await expect(this.textBoxTitle).toBeVisible();
+        });
     }
 
     async fillTextBoxForm(testData: TextBoxData) {
+        await test.step('Fill Text Box Form', async () => {
         await this.fullNameInput.fill(testData.fullName);
         await this.emailInput.fill(testData.email);
         await this.addressInput.fill(testData.currentAddress);
         await this.permanentAddressInput.fill(testData.permanentAddress);
-        
+        });
         return testData;
+
     }
     async validateTextBoxForm(testData: TextBoxData) {
+        await test.step('Validate Text Box Form', async () => {
         await expect(this.fullNameInput).toHaveValue(testData.fullName);
         await expect(this.emailInput).toHaveValue(testData.email);
         await expect(this.addressInput).toHaveValue(testData.currentAddress);
         await expect(this.permanentAddressInput).toHaveValue(testData.permanentAddress);
+        });
     }
 
     async submitTextBoxForm() {
+        await test.step('Submit Text Box Form', async () => {
         await this.submitButton.click();
+        });
     }
 }
