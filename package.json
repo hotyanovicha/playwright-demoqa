@@ -3,7 +3,13 @@
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.3.0"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "playwright test",
+    "test:chrome": "playwright test --project=chromium",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
   "dependencies": {
     "@faker-js/faker": "^10.0.0"
   }
