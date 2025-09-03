@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect} from '@playwright/test';
 import { ElementsPage } from '../page/ElementsPage';
 import { TextBoxDataGenerator } from '../test-data/textbox-data-generator';
 
@@ -10,7 +10,7 @@ test.describe('Elements Page Tests', () => {
         await elementsPage.openTextBoxPage();
         await elementsPage.expectTextBoxPageVisible();
   
-    });
+})});
 
     test('Should successfully submit valid Text Box form data', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
@@ -39,5 +39,11 @@ test.describe('Elements Page Tests', () => {
 
     });
 
+test('Submit Text Box Form with empty form', async ({page}) =>{
+    const elementsPage = new ElementsPage(page);
+    await elementsPage.openTextBoxPage();
+    const testData = TextBoxDataGenerator.create({email: ''});
+    await elementsPage.fillTextBoxForm(testData);
+    await elementsPage.submitTextBoxForm();
 
 })
