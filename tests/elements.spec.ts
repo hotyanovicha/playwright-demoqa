@@ -39,13 +39,11 @@ test.describe('Elements Page Tests', () => {
 
     });
 
-
-})
-
 test('Submit Text Box Form with empty form', async ({page}) =>{
     const elementsPage = new ElementsPage(page);
     await elementsPage.openTextBoxPage();
     const testData = TextBoxDataGenerator.create({email: ''});
     await elementsPage.fillTextBoxForm(testData);
     await elementsPage.submitTextBoxForm();
+
 })
