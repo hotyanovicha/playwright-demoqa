@@ -1,31 +1,60 @@
-name: Tests
+name: UI Regression [Chrome]
 
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   test:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - uses: actions/checkout@v4
+    
     - uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-    - run: npm ci
-    - run: npx playwright install --with-deps chromium
-    - run: npm run test:chrome
-    - uses: actions/configure-pages@v4
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+    
+    - name: Run Playwright tests in Chrome
+      run: npm run test:chrome
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
       if: always()
-    - uses: actions/upload-pages-artifact@v3
+    
+    - name: Prepare report for GitHub Pages
+      if: always()
+      run: |
+        mkdir -p github-pages-site
+        cp -r playwright-report/* github-pages-site/
+
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
       if: always()
       with:
-        path: playwright-report/
-    - uses: actions/deploy-pages@v4
+        path: github-pages-site/
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
       if: always()
