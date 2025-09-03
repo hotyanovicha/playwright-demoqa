@@ -46,7 +46,11 @@ jobs:
       if: always()
       run: |
         mkdir -p github-pages-site
-        cp -r playwright-report/* github-pages-site/
+        if [ -d "playwright-report" ] && [ "$(ls -A playwright-report)" ]; then
+          cp -r playwright-report/* github-pages-site/
+        else
+          echo "<h1>No test report generated</h1>" > github-pages-site/index.html
+        fi
 
     - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
