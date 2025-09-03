@@ -33,7 +33,6 @@ export class ElementsPage extends BasePage {
         this.receivedEmail = page.locator('#output #email').describe('Received Email')
         this.receivedAddress = page.locator('#output #currentAddress').describe('Received Address')
         this.receivedPermanentAddress = page.locator('#output #permanentAddress').describe('Received Permanent Address')
-
     }
 
     async openElementsPage() {
@@ -76,7 +75,7 @@ export class ElementsPage extends BasePage {
     })}
     
     async validateSubmittedData(testData: TextBoxData) {
-        await test.step('Validate Text Box Form', async () => {
+        await test.step('Validate Submitted Data', async () => {
           // Validate submitted data with proper text matching
         await expect(this.receivedFullName).toContainText(testData.fullName);
         await expect(this.receivedEmail).toContainText(testData.email);
