@@ -2,6 +2,7 @@ import { BasePage } from "../BasePage";
 import { Locator, expect, Page, test } from "@playwright/test";
 import { TextBoxData } from "../../test-data/textbox-data-generator";
 
+
 export class TextBoxPage extends BasePage {
 
     fullNameInput: Locator;
@@ -18,8 +19,8 @@ export class TextBoxPage extends BasePage {
         super(page);
         this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name')
         this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com').describe('Email Input')
-        this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address')
-        this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress');
+        this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address').describe('Address Input')
+        this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress').describe('Permanent Address Input');
         this.submitButton = page.getByRole('button', { name: 'Submit' }).describe('Submit Button')
         
         // Fixed selectors for output validation - using text content, not placeholders
