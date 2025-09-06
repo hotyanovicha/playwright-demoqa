@@ -17,7 +17,7 @@ export class TextBoxPage extends BasePage {
 
     constructor(page: Page) {
         super(page);
-        this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name')
+        this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name').describe('Full Name Input')
         this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com').describe('Email Input')
         this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address').describe('Address Input')
         this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress').describe('Permanent Address Input');
