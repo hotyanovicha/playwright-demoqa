@@ -1,5 +1,5 @@
 export const Urls = {
     elements: '/elements',
-    login: '/forms'
+    webtables: '/webtables'
   } as const;
   

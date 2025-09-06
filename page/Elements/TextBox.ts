@@ -1,13 +1,10 @@
-import { BasePage } from "./BasePage";
-import { Locator, expect } from "@playwright/test";
-import { Urls } from "../test-data/page-url-endpoints";
-import { Page, test } from "@playwright/test";
-import { TextBoxData } from "../test-data/textbox-data-generator";
+import { BasePage } from "../BasePage";
+import { Locator, expect, Page, test } from "@playwright/test";
+import { TextBoxData } from "../../test-data/textbox-data-generator";
 
-export class ElementsPage extends BasePage {
 
-    textBoxButton: Locator;
-    textBoxTitle: Locator;
+export class TextBoxPage extends BasePage {
+
     fullNameInput: Locator;
     emailInput: Locator;
     addressInput: Locator;
@@ -20,12 +17,10 @@ export class ElementsPage extends BasePage {
 
     constructor(page: Page) {
         super(page);
-        this.textBoxButton = page.locator('span.text', { hasText: 'Text Box' }).describe('Text Box Button')
-        this.textBoxTitle = page.getByRole('heading', { name: 'Text Box'}).describe('Text Box Title')
         this.fullNameInput = page.locator('#userForm').getByPlaceholder('Full Name')
         this.emailInput = page.locator('#userForm').getByPlaceholder('name@example.com').describe('Email Input')
-        this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address')
-        this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress');
+        this.addressInput = page.locator('#userForm').getByPlaceholder('Current Address').describe('Address Input')
+        this.permanentAddressInput = page.locator('textarea.form-control#permanentAddress').describe('Permanent Address Input');
         this.submitButton = page.getByRole('button', { name: 'Submit' }).describe('Submit Button')
         
         // Fixed selectors for output validation - using text content, not placeholders
@@ -33,26 +28,6 @@ export class ElementsPage extends BasePage {
         this.receivedEmail = page.locator('#output #email').describe('Received Email')
         this.receivedAddress = page.locator('#output #currentAddress').describe('Received Address')
         this.receivedPermanentAddress = page.locator('#output #permanentAddress').describe('Received Permanent Address')
-    }
-
-    async openElementsPage() {
-        await test.step('Open Elements Page', async () => {
-        await this.navigateTo(Urls.elements);
-    })}
-    
-    async expectElementsPageVisible() {
-        await expect(this.page).toHaveURL(Urls.elements);
-    }
-    
-    async openTextBoxPage() {
-        await test.step('Open Text Box Page', async () => {
-        await this.openElementsPage();
-        await this.expectElementsPageVisible(); //is it okay approach?
-        await this.textBoxButton.click();
-    })}
-
-    async expectTextBoxPageVisible() {
-        await expect(this.textBoxTitle).toBeVisible();
     }
 
     async fillTextBoxForm(testData: TextBoxData) {
