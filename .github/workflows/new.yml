@@ -1,0 +1,198 @@
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Target environment
+        default: dev
+        options:
+          - dev
+          - stage
+      tests:
+        type: string
+        description: Test selection (use "all" for everything, or pass a file/glob/title filter)
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ENV: ${{ inputs.env }}
+      EMAIL: ${{ secrets.EMAIL }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Compute test args
+        id: tests
+        shell: bash
+        run: |
+          if [[ "${{ inputs.tests }}" == "all" || -z "${{ inputs.tests }}" ]]; then
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ inputs.tests }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Smoke tests
+        run: pnpm exec playwright test ${{ steps.tests.outputs.value }} --project chrome
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-smoke
+          path: playwright-report
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+      - name: Upload traces and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-smoke
+          path: test-results
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+  regression:
+    name: Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ENV: ${{ inputs.env }}
+      EMAIL: ${{ secrets.EMAIL }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Compute test args
+        id: tests
+        shell: bash
+        run: |
+          if [[ "${{ inputs.tests }}" == "all" || -z "${{ inputs.tests }}" ]]; then
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ inputs.tests }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Regression tests
+        run: pnpm exec playwright test ${{ steps.tests.outputs.value }} --project chrome
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-regression
+          path: playwright-report
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+      - name: Upload traces and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-regression
+          path: test-results
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+  debug:
+    name: Debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ENV: ${{ inputs.env }}
+      EMAIL: ${{ secrets.EMAIL }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+      DEBUG: pw:api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Compute test args
+        id: tests
+        shell: bash
+        run: |
+          if [[ "${{ inputs.tests }}" == "all" || -z "${{ inputs.tests }}" ]]; then
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ inputs.tests }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Debug tests (serial, no retries)
+        run: pnpm exec playwright test ${{ steps.tests.outputs.value }} --project chrome --workers 1 --retries 0
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-debug
+          path: playwright-report
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+      - name: Upload traces and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-debug
+          path: test-results
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
