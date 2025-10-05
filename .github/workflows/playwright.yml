@@ -1,9 +1,39 @@
 name: UI Regression [Chrome]
 
+run-name: >
+  ${{ github.workflow }} #${{ github.run_number }}
+  :: ${{ inputs.env || 'dev' }}
+  :: ${{ inputs.project || 'api' }}
+  :: ${{ inputs.tests || 'all tests' }}
+
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      project:
+        description: 'Project'
+        required: false
+        default: 'api'
+        type: choice
+        options:
+          - api
+          - web
+          - mobile
+      tests:
+        description: 'Tests to run'
+        required: false
+        default: 'all tests'
+        type: string
 
 permissions:
   contents: read
@@ -36,7 +66,15 @@ jobs:
       run: npx playwright install --with-deps chromium
     
     - name: Run Playwright tests in Chrome
-      run: npm run test:chrome
+      run: |
+        START_TIME=$(date +%s)
+        npm run test:chrome
+        EXIT_CODE=$?
+        END_TIME=$(date +%s)
+        TEST_DURATION=$((END_TIME - START_TIME))
+        echo "TEST_DURATION=$TEST_DURATION" >> $GITHUB_ENV
+        echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+        exit 0
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -97,6 +135,51 @@ jobs:
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
 
+    - name: Add summary
+      if: always()
+      shell: bash
+      run: |
+        {
+          echo "### Test Execution Summary"
+          echo ""
+          echo "| Metric | Value |"
+          echo "|---|---|"
+          echo "| **Environment** | \`${{ inputs.env || 'dev' }}\` |"
+          echo "| **Project** | \`${{ inputs.project || 'api' }}\` |"
+          echo "| **Tests** | \`${{ inputs.tests || 'all tests' }}\` |"
+          echo "| **Duration** | \`${{ env.TEST_DURATION || 'N/A' }}s\` |"
+          echo "| **Exit Code** | \`${{ env.EXIT_CODE || 'N/A' }}\` |"
+
+          if [ -f "test-results.json" ]; then
+            EXPECTED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "expected")] | length' test-results.json 2>/dev/null || echo "0")
+            UNEXPECTED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "unexpected")] | length' test-results.json 2>/dev/null || echo "0")
+            SKIPPED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results.json 2>/dev/null || echo "0")
+            FLAKY=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "flaky")] | length' test-results.json 2>/dev/null || echo "0")
+            TOTAL=$(jq '.suites[].suites[].specs | length' test-results.json | awk '{s+=$1} END {print s}')
+            PASSED=$EXPECTED
+            FAILED=$UNEXPECTED
+
+            if [ "$TOTAL" -gt 0 ]; then
+              PASS_RATE=$(awk "BEGIN {printf \"%.1f\", $PASSED * 100 / $TOTAL}")
+              echo "| **Total** | $TOTAL |"
+              echo "| **Passed** | $PASSED |"
+              echo "| **Failed** | $FAILED |"
+              echo "| **Skipped** | $SKIPPED |"
+              echo "| **Flaky** | $FLAKY |"
+              echo "| **Pass Rate** | ${PASS_RATE}% |"
+            else
+              echo "| **Test Results** | No tests executed |"
+            fi
+          else
+            echo "| **Test Results** | No results file found |"
+          fi
+
+          echo ""
+          echo "### Artifacts"
+          echo "- Report: **${{ github.workflow }}-report-#${{ github.run_number }}-${{ inputs.env || 'dev' }}-${{ inputs.project || 'api' }}**"
+          echo "- Results: **results-#${{ github.run_number }}-${{ inputs.env || 'dev' }}-${{ inputs.project || 'api' }}**"
+        } >> "$GITHUB_STEP_SUMMARY"
+
     - name: Send Slack notification
       if: always()
       uses: slackapi/slack-github-action@v1.27.0
@@ -112,44 +195,37 @@ jobs:
                     "type": "header",
                     "text": {
                       "type": "plain_text",
-                      "text": "${{ steps.test_results.outputs.status }} - ${{ github.workflow }}"
+                      "text": "${{ steps.test_results.outputs.status }} | ${{ github.workflow }} #${{ github.run_number }}"
                     }
-                  },
-                  {
-                    "type": "section",
-                    "fields": [
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Job:*\n${{ github.job }}"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Environment:*\nChromium on Ubuntu"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Total Tests:*\n${{ steps.test_results.outputs.total }}"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Pass Rate:*\n${{ steps.test_results.outputs.pass_rate }}%"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Passed:*\n✅ ${{ steps.test_results.outputs.passed }}"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Failed:*\n❌ ${{ steps.test_results.outputs.failed }}"
-                      }
-                    ]
                   },
                   {
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "<${{ steps.deployment.outputs.page_url }}|📊 View Test Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 View Job>"
+                      "text": "*Results:* ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed (${{ steps.test_results.outputs.pass_rate }}%) | *Env:* `${{ inputs.env || 'dev' }}` | *Project:* `${{ inputs.project || 'api' }}` | *Tests:* `${{ inputs.tests || 'all tests' }}` | *Runner:* Chromium/Ubuntu"
                     }
+                  },
+                  {
+                    "type": "actions",
+                    "elements": [
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "View Report"
+                        },
+                        "url": "${{ steps.deployment.outputs.page_url }}",
+                        "style": "primary"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "View Job"
+                        },
+                        "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                      }
+                    ]
                   }
                 ]
               }
@@ -158,3 +234,11 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+    - name: Fail job if tests failed
+      if: always()
+      run: |
+        if [ "${EXIT_CODE:-0}" -ne 0 ]; then
+          echo "Playwright reported failures (exit code $EXIT_CODE)."
+          exit $EXIT_CODE
+        fi
