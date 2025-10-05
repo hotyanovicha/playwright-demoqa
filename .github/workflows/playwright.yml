@@ -186,48 +186,37 @@ jobs:
       with:
         payload: |
           {
-            "text": "Playwright Test Results",
+            "text": "Playwright Test Results - ${{ steps.test_results.outputs.status }}",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "${{ steps.test_results.outputs.status }} | ${{ github.workflow }} #${{ github.run_number }}"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Results:* ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed (${{ steps.test_results.outputs.pass_rate }}%) | *Env:* `${{ inputs.env || 'dev' }}` | *Project:* `${{ inputs.project || 'api' }}` | *Tests:* `${{ inputs.tests || 'all tests' }}` | *Runner:* Chromium/Ubuntu"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ":chart_with_upwards_trend: <${{ steps.deployment.outputs.page_url }}|View Test Report> | :link: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
+                }
+              },
+              {
+                "type": "divider"
+              }
+            ],
             "attachments": [
               {
                 "color": "${{ steps.test_results.outputs.status_color }}",
-                "blocks": [
-                  {
-                    "type": "header",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "${{ steps.test_results.outputs.status }} | ${{ github.workflow }} #${{ github.run_number }}"
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "*Results:* ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed (${{ steps.test_results.outputs.pass_rate }}%) | *Env:* `${{ inputs.env || 'dev' }}` | *Project:* `${{ inputs.project || 'api' }}` | *Tests:* `${{ inputs.tests || 'all tests' }}` | *Runner:* Chromium/Ubuntu"
-                    }
-                  },
-                  {
-                    "type": "actions",
-                    "elements": [
-                      {
-                        "type": "button",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "View Report"
-                        },
-                        "url": "${{ steps.deployment.outputs.page_url }}",
-                        "style": "primary"
-                      },
-                      {
-                        "type": "button",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "View Job"
-                        },
-                        "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                      }
-                    ]
-                  }
-                ]
+                "fallback": "Test Results: ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed"
               }
             ]
           }
