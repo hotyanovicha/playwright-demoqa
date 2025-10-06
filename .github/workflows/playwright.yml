@@ -216,12 +216,6 @@ jobs:
                 "type": "mrkdwn",
                 "text": "${{ steps.test_results.outputs.pass_rate_icon }}*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.executed }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
               }
-          ],
-          "attachments": [
-            {
-              "color": "${{ steps.test_results.outputs.status_color }}",
-              "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}% (${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.executed }}) tests passed (${{ steps.test_results.outputs.duration_min }} min)"
-            }
           ]
         }
         EOF
