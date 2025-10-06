@@ -74,9 +74,15 @@ jobs:
         # Extract test results immediately after execution
         DURATION_SEC="${TEST_DURATION:-0}"
         if [ "$DURATION_SEC" -eq 0 ]; then
-          DURATION_MIN="N/A"
+          DURATION_FORMATTED="N/A"
         else
-          DURATION_MIN=$(awk "BEGIN {printf \"%.0f\", $DURATION_SEC/60}")
+          DURATION_MIN=$((DURATION_SEC / 60))
+          DURATION_REMAINING_SEC=$((DURATION_SEC % 60))
+          if [ "$DURATION_MIN" -eq 0 ]; then
+            DURATION_FORMATTED="${DURATION_REMAINING_SEC} sec"
+          else
+            DURATION_FORMATTED="${DURATION_MIN} min ${DURATION_REMAINING_SEC} sec"
+          fi
         fi
         
         if [ -f test-results.json ]; then
@@ -119,7 +125,7 @@ jobs:
           echo "executed=$EXECUTED" >> $GITHUB_OUTPUT
           echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
           echo "pass_rate_icon=$PASS_RATE_ICON" >> $GITHUB_OUTPUT
-          echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
+          echo "duration_formatted=$DURATION_FORMATTED" >> $GITHUB_OUTPUT
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
         else
@@ -131,7 +137,7 @@ jobs:
           echo "executed=0" >> $GITHUB_OUTPUT
           echo "pass_rate=0" >> $GITHUB_OUTPUT
           echo "pass_rate_icon=" >> $GITHUB_OUTPUT
-          echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
+          echo "duration_formatted=$DURATION_FORMATTED" >> $GITHUB_OUTPUT
           echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
@@ -172,7 +178,7 @@ jobs:
           echo "| **Environment** | \`${{ inputs.env || 'dev' }}\` |"
           echo "| **Project** | \`${{ inputs.project || 'api' }}\` |"
           echo "| **Tests** | \`${{ inputs.tests || 'all tests' }}\` |"
-          echo "| **Duration** | \`${{ env.TEST_DURATION || 'N/A' }}s\` |"
+          echo "| **Test Execution Duration** | \`${{ steps.test_execution.outputs.duration_formatted || 'N/A' }}\` |"
           echo "| **Exit Code** | \`${{ env.EXIT_CODE || 'N/A' }}\` |"
 
           if [ -f "test-results.json" ]; then
@@ -221,7 +227,7 @@ jobs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "${{ steps.test_execution.outputs.pass_rate_icon }}*${{ steps.test_execution.outputs.pass_rate }}%* (*${{ steps.test_execution.outputs.passed }}/${{ steps.test_execution.outputs.executed }}*) tests passed (*${{ steps.test_execution.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_execution.outputs.total }}* total | *${{ steps.test_execution.outputs.passed }}* passed | *${{ steps.test_execution.outputs.failed }}* failed | *${{ steps.test_execution.outputs.skipped }}* skipped | *${{ steps.test_execution.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
+                "text": "${{ steps.test_execution.outputs.pass_rate_icon }}*${{ steps.test_execution.outputs.pass_rate }}%* (*${{ steps.test_execution.outputs.passed }}/${{ steps.test_execution.outputs.executed }}*) tests passed (*${{ steps.test_execution.outputs.duration_formatted }}*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_execution.outputs.total }}* total | *${{ steps.test_execution.outputs.passed }}* passed | *${{ steps.test_execution.outputs.failed }}* failed | *${{ steps.test_execution.outputs.skipped }}* skipped | *${{ steps.test_execution.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
               }
             }
           ]
