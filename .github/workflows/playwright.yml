@@ -16,19 +16,13 @@ on:
         required: false
         default: 'dev'
         type: choice
-        options:
-          - dev
-          - staging
-          - prod
+        options: [ dev, staging, prod ]
       project:
         description: 'Project'
         required: false
         default: 'api'
         type: choice
-        options:
-          - api
-          - web
-          - mobile
+        options: [ api, web, mobile ]
       tests:
         description: 'Tests to run'
         required: false
@@ -105,24 +99,28 @@ jobs:
           TOTAL=$(jq '.suites[].suites[].specs | length' test-results.json | awk '{s+=$1} END {print s}')
           PASSED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "expected")] | length' test-results.json)
           FAILED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "unexpected")] | length' test-results.json)
-          
-          if [ "$TOTAL" -eq 0 ]; then
+          SKIPPED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results.json)
+          FLAKY=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "flaky")] | length' test-results.json)
+
+          if [ "${TOTAL:-0}" -eq 0 ]; then
             PASS_RATE="0"
           else
             PASS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED/$TOTAL)*100}")
           fi
-          
-          if [ "$FAILED" -eq 0 ]; then
-            STATUS="✅ PASSED"
+
+          if [ "${FAILED:-0}" -eq 0 ] && [ "${TOTAL:-0}" -gt 0 ]; then
+            STATUS="PASSED"
             STATUS_COLOR="good"
           else
-            STATUS="❌ FAILED"
+            STATUS="FAILED"
             STATUS_COLOR="danger"
           fi
-          
+
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
           echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "flaky=$FLAKY" >> $GITHUB_OUTPUT
           echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
@@ -130,8 +128,10 @@ jobs:
           echo "total=0" >> $GITHUB_OUTPUT
           echo "passed=0" >> $GITHUB_OUTPUT
           echo "failed=0" >> $GITHUB_OUTPUT
+          echo "skipped=0" >> $GITHUB_OUTPUT
+          echo "flaky=0" >> $GITHUB_OUTPUT
           echo "pass_rate=0" >> $GITHUB_OUTPUT
-          echo "status=⚠️ NO RESULTS" >> $GITHUB_OUTPUT
+          echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
 
@@ -186,37 +186,45 @@ jobs:
       with:
         payload: |
           {
-            "text": "Playwright Test Results - ${{ steps.test_results.outputs.status }}",
+            "text": "Playwright Test Summary",
             "blocks": [
               {
-                "type": "header",
+                "type": "section",
                 "text": {
-                  "type": "plain_text",
-                  "text": "${{ steps.test_results.outputs.status }} | ${{ github.workflow }} #${{ github.run_number }}"
+                  "type": "mrkdwn",
+                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (${{ steps.test_results.outputs.total }}) — *${{ github.workflow }}* #${{ github.run_number }} *(branch: ${{ github.ref_name }})*"
                 }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Env:* `${{ inputs.env || 'dev' }}` | *Project:* `${{ inputs.project || 'ui' }}` | *Runner:* Chromium/Ubuntu"
+                  }
+                ]
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Results:* ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed (${{ steps.test_results.outputs.pass_rate }}%) | *Env:* `${{ inputs.env || 'dev' }}` | *Project:* `${{ inputs.project || 'api' }}` | *Tests:* `${{ inputs.tests || 'all tests' }}` | *Runner:* Chromium/Ubuntu"
+                  "text": "*Details:* `${{ steps.test_results.outputs.total }} total | ${{ steps.test_results.outputs.passed }} passed | ${{ steps.test_results.outputs.failed }} failed | ${{ steps.test_results.outputs.skipped }} skipped | ${{ steps.test_results.outputs.flaky }} flaky`"
                 }
               },
               {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": ":chart_with_upwards_trend: <${{ steps.deployment.outputs.page_url }}|View Test Report> | :link: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
-                }
-              },
-              {
-                "type": "divider"
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<${{ steps.deployment.outputs.page_url }}|View Test Report> • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
+                  }
+                ]
               }
             ],
             "attachments": [
               {
                 "color": "${{ steps.test_results.outputs.status_color }}",
-                "fallback": "Test Results: ${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }} passed"
+                "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}%"
               }
             ]
           }

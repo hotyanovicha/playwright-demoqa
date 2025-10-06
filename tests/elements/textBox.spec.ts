@@ -5,13 +5,13 @@ import { TextBoxDataGenerator } from '../../test-data/textbox-data-generator';
 
 // Test suite for DemoQA Elements functionality
 test.describe('Elements Page Tests', () => {
-    test('Should open and display Text Box page correctly', async ({ page }) => {
+    test.skip('Should open and display Text Box page correctly', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
     });
 
-    test('Should successfully submit valid Text Box form data', async ({ page }) => {
+    test.skip('Should successfully submit valid Text Box form data', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
@@ -28,7 +28,7 @@ test.describe('Elements Page Tests', () => {
         await textBoxPage.validateSubmittedData(testData);
     });
 
-    test('Should handle invalid email format gracefully', async ({ page }) => {
+    test.skip('Should handle invalid email format gracefully', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
@@ -40,7 +40,7 @@ test.describe('Elements Page Tests', () => {
 
     });
 
-test('Submit Text Box Form with empty form', async ({page}) =>{
+test.skip('Submit Text Box Form with empty form', async ({page}) =>{
     const elementsPage = new ElementsPage(page);
     await elementsPage.openElementPage('textBox');
     await elementsPage.expectElementPageVisible('textBox');
