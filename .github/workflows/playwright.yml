@@ -95,6 +95,10 @@ jobs:
       if: always()
       id: test_results
       run: |
+        # Calculate duration in minutes
+        DURATION_SEC="${TEST_DURATION:-0}"
+        DURATION_MIN=$(awk "BEGIN {printf \"%.0f\", $DURATION_SEC/60}")
+        
         if [ -f test-results.json ]; then
           TOTAL=$(jq '.suites[].suites[].specs | length' test-results.json | awk '{s+=$1} END {print s}')
           PASSED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "expected")] | length' test-results.json)
@@ -105,7 +109,7 @@ jobs:
           if [ "${TOTAL:-0}" -eq 0 ]; then
             PASS_RATE="0"
           else
-            PASS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED/$TOTAL)*100}")
+            PASS_RATE=$(awk "BEGIN {printf \"%.0f\", ($PASSED/$TOTAL)*100}")
           fi
 
           if [ "${FAILED:-0}" -eq 0 ] && [ "${TOTAL:-0}" -gt 0 ]; then
@@ -125,6 +129,7 @@ jobs:
           echo "flaky=$FLAKY" >> $GITHUB_OUTPUT
           echo "executed=$EXECUTED" >> $GITHUB_OUTPUT
           echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
+          echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
         else
@@ -135,6 +140,7 @@ jobs:
           echo "flaky=0" >> $GITHUB_OUTPUT
           echo "executed=0" >> $GITHUB_OUTPUT
           echo "pass_rate=0" >> $GITHUB_OUTPUT
+          echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
           echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
@@ -196,14 +202,30 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (executed: ${{ steps.test_results.outputs.executed }}) — *${{ github.workflow }}* #${{ github.run_number }} • <${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky\n<${{ steps.deployment.outputs.page_url }}|Report> • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Job>"
+                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — ${{ github.workflow }} #${{ github.run_number }} (${{ github.ref_name }})"
                 }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<${{ steps.deployment.outputs.page_url }}|View Test Report> • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
+                  }
+                ]
               }
             ],
             "attachments": [
               {
                 "color": "${{ steps.test_results.outputs.status_color }}",
-                "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}% (executed: ${{ steps.test_results.outputs.executed }})"
+                "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}% (${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}) tests passed (${{ steps.test_results.outputs.duration_min }} min)"
               }
             ]
           }
