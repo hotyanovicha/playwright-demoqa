@@ -97,7 +97,11 @@ jobs:
       run: |
         # Calculate duration in minutes
         DURATION_SEC="${TEST_DURATION:-0}"
-        DURATION_MIN=$(awk "BEGIN {printf \"%.0f\", $DURATION_SEC/60}")
+        if [ "$DURATION_SEC" -eq 0 ]; then
+          DURATION_MIN="N/A"
+        else
+          DURATION_MIN=$(awk "BEGIN {printf \"%.0f\", $DURATION_SEC/60}")
+        fi
         
         if [ -f test-results.json ]; then
           TOTAL=$(jq '.suites[].suites[].specs | length' test-results.json | awk '{s+=$1} END {print s}')
@@ -202,24 +206,9 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — ${{ github.workflow }} <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)"
-                }
-              },
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
+                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)"
                   "text": "*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
                 }
-              },
-              {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
-                  }
-                ]
               }
             ],
             "attachments": [
