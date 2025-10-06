@@ -203,7 +203,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "🗂️ ${{ steps.test_results.outputs.total }} total | ✅ ${{ steps.test_results.outputs.passed }} passed | ⚠️ ${{ steps.test_results.outputs.failed }} failed | 🏖️ ${{ steps.test_results.outputs.skipped }} skipped | 🌀 ${{ steps.test_results.outputs.flaky }} flaky"
+                  "text": "*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky"
                 }
               },
               {
