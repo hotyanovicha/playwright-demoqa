@@ -60,20 +60,25 @@ jobs:
         npm ci
         npx playwright install --with-deps chromium
     
-    - name: Run Playwright tests and extract results
-      id: test_execution
+    - name: Run Playwright tests
       run: |
         START_TIME=$(date +%s)
+        set +e  # Disable exit on error
         npm run test:chrome
         EXIT_CODE=$?
+        set -e  # Re-enable exit on error
         END_TIME=$(date +%s)
         TEST_DURATION=$((END_TIME - START_TIME))
         echo "TEST_DURATION=$TEST_DURATION" >> $GITHUB_ENV
         echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
-        
-        # Extract test results immediately after execution
+        echo "Tests completed with exit code: $EXIT_CODE"
+    
+    - name: Extract test results
+      id: test_execution
+      if: always()
+      run: |
+        # Format duration
         DURATION_SEC="${TEST_DURATION:-0}"
-        echo "DEBUG: TEST_DURATION=$TEST_DURATION, DURATION_SEC=$DURATION_SEC"
         if [ "$DURATION_SEC" -eq 0 ]; then
           DURATION_FORMATTED="N/A"
         else
@@ -85,29 +90,17 @@ jobs:
             DURATION_FORMATTED="${DURATION_MIN} min ${DURATION_REMAINING_SEC} sec"
           fi
         fi
-        echo "DEBUG: DURATION_FORMATTED=$DURATION_FORMATTED"
         
-        # Debug: Check if test-results.json exists and show its structure
-        echo "DEBUG: Checking for test-results.json..."
+        # Parse test results
         if [ -f test-results.json ]; then
-          echo "DEBUG: test-results.json found, showing first few lines:"
-          head -5 test-results.json
-        else
-          echo "DEBUG: test-results.json NOT found"
-          echo "DEBUG: Listing files in current directory:"
-          ls -la
-        fi
-        
-        if [ -f test-results.json ]; then
-          echo "DEBUG: Extracting test results from JSON..."
+          echo "Found test-results.json, extracting metrics..."
           TOTAL=$(jq '.suites[].suites[].specs | length' test-results.json | awk '{s+=$1} END {print s}')
           PASSED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "expected")] | length' test-results.json)
           FAILED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "unexpected")] | length' test-results.json)
           SKIPPED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results.json)
           FLAKY=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "flaky")] | length' test-results.json)
           
-          echo "DEBUG: Extracted values - TOTAL=$TOTAL, PASSED=$PASSED, FAILED=$FAILED, SKIPPED=$SKIPPED, FLAKY=$FLAKY"
-
+          echo "Test results - Total: $TOTAL, Passed: $PASSED, Failed: $FAILED, Skipped: $SKIPPED, Flaky: $FLAKY"
 
           if [ "${FAILED:-0}" -eq 0 ] && [ "${TOTAL:-0}" -gt 0 ]; then
             STATUS="PASSED"
@@ -141,11 +134,11 @@ jobs:
           echo "executed=$EXECUTED" >> $GITHUB_OUTPUT
           echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
           echo "pass_rate_icon=$PASS_RATE_ICON" >> $GITHUB_OUTPUT
-          echo "DEBUG: About to output duration_formatted=$DURATION_FORMATTED"
           echo "duration_formatted=$DURATION_FORMATTED" >> $GITHUB_OUTPUT
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
         else
+          echo "WARNING: test-results.json not found"
           echo "total=0" >> $GITHUB_OUTPUT
           echo "passed=0" >> $GITHUB_OUTPUT
           echo "failed=0" >> $GITHUB_OUTPUT
@@ -154,13 +147,10 @@ jobs:
           echo "executed=0" >> $GITHUB_OUTPUT
           echo "pass_rate=0" >> $GITHUB_OUTPUT
           echo "pass_rate_icon=" >> $GITHUB_OUTPUT
-          echo "DEBUG: About to output duration_formatted (no results)=$DURATION_FORMATTED"
           echo "duration_formatted=$DURATION_FORMATTED" >> $GITHUB_OUTPUT
           echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
-        
-        exit 0
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
