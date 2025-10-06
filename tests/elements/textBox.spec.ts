@@ -5,13 +5,13 @@ import { TextBoxDataGenerator } from '../../test-data/textbox-data-generator';
 
 // Test suite for DemoQA Elements functionality
 test.describe('Elements Page Tests', () => {
-    test.skip('Should open and display Text Box page correctly', async ({ page }) => {
+    test('Should open and display Text Box page correctly', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
     });
 
-    test.skip('Should successfully submit valid Text Box form data', async ({ page }) => {
+    test('Should successfully submit valid Text Box form data', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
@@ -28,7 +28,7 @@ test.describe('Elements Page Tests', () => {
         await textBoxPage.validateSubmittedData(testData);
     });
 
-    test.skip('Should handle invalid email format gracefully', async ({ page }) => {
+    test('Should handle invalid email format gracefully', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('textBox');
         await elementsPage.expectElementPageVisible('textBox');
