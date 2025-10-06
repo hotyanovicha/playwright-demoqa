@@ -125,6 +125,13 @@ jobs:
           fi
 
           EXECUTED=$((TOTAL - SKIPPED))
+
+          # Icon only if pass rate < 90%
+          if awk "BEGIN {exit !(${PASS_RATE} < 90)}"; then
+            PASS_RATE_ICON="⚠️ "
+          else
+            PASS_RATE_ICON=""
+          fi
           
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
@@ -133,6 +140,7 @@ jobs:
           echo "flaky=$FLAKY" >> $GITHUB_OUTPUT
           echo "executed=$EXECUTED" >> $GITHUB_OUTPUT
           echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
+          echo "pass_rate_icon=$PASS_RATE_ICON" >> $GITHUB_OUTPUT
           echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
@@ -144,6 +152,7 @@ jobs:
           echo "flaky=0" >> $GITHUB_OUTPUT
           echo "executed=0" >> $GITHUB_OUTPUT
           echo "pass_rate=0" >> $GITHUB_OUTPUT
+          echo "pass_rate_icon=" >> $GITHUB_OUTPUT
           echo "duration_min=$DURATION_MIN" >> $GITHUB_OUTPUT
           echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
@@ -206,7 +215,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)"
+                  "text": "${{ steps.test_results.outputs.pass_rate_icon }}*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)"
                   "text": "*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
                 }
               }
