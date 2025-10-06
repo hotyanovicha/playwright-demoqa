@@ -6,6 +6,6 @@ test.describe('Elements Page Tests', () => {
     test('Should open and display Web Tables page correctly', async ({ page }) => {
         const elementsPage = new ElementsPage(page);
         await elementsPage.openElementPage('webTables');
-        await elementsPage.expectElementPageVisible('webTabless');
+        await elementsPage.expectElementPageVisible('webTables');
     });
 });
