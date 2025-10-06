@@ -196,24 +196,8 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (executed: ${{ steps.test_results.outputs.executed }}) — *${{ github.workflow }}* #${{ github.run_number }} *(<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|branch: ${{ github.ref_name }}>) *"
+                  "text": "*${{ steps.test_results.outputs.pass_rate }}%* (executed: ${{ steps.test_results.outputs.executed }}) — *${{ github.workflow }}* #${{ github.run_number }} • <${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky\n<${{ steps.deployment.outputs.page_url }}|Report> • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Job>"
                 }
-              },
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky"
-                }
-              },
-              {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "<${{ steps.deployment.outputs.page_url }}|View Test Report> • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Job>"
-                  }
-                ]
               }
             ],
             "attachments": [
