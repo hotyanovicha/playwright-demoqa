@@ -46,20 +46,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Setup and Install
+      uses: actions/checkout@v4
     
-    - uses: actions/setup-node@v4
+    - name: Setup Node.js and Install Dependencies
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
     
-    - name: Install dependencies
-      run: npm ci
+    - name: Install Dependencies and Playwright
+      run: |
+        npm ci
+        npx playwright install --with-deps chromium
     
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps chromium
-    
-    - name: Run Playwright tests in Chrome
+    - name: Run Playwright tests and extract results
+      id: test_execution
       run: |
         START_TIME=$(date +%s)
         npm run test:chrome
@@ -68,34 +70,8 @@ jobs:
         TEST_DURATION=$((END_TIME - START_TIME))
         echo "TEST_DURATION=$TEST_DURATION" >> $GITHUB_ENV
         echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
-        exit 0
-    
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      if: always()
-    
-    - name: Prepare report for GitHub Pages
-      if: always()
-      run: |
-        mkdir -p github-pages-site
-        cp -r playwright-report/* github-pages-site/
-
-    - name: Upload to GitHub Pages
-      uses: actions/upload-pages-artifact@v3
-      if: always()
-      with:
-        path: github-pages-site/
-    
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      if: always()
-
-    - name: Extract test results
-      if: always()
-      id: test_results
-      run: |
-        # Calculate duration in minutes
+        
+        # Extract test results immediately after execution
         DURATION_SEC="${TEST_DURATION:-0}"
         if [ "$DURATION_SEC" -eq 0 ]; then
           DURATION_MIN="N/A"
@@ -110,11 +86,6 @@ jobs:
           SKIPPED=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results.json)
           FLAKY=$(jq '[.suites[].suites[].specs[].tests[] | select(.status == "flaky")] | length' test-results.json)
 
-          if [ "${TOTAL:-0}" -eq 0 ]; then
-            PASS_RATE="0"
-          else
-            PASS_RATE=$(awk "BEGIN {printf \"%.0f\", ($PASSED/$TOTAL)*100}")
-          fi
 
           if [ "${FAILED:-0}" -eq 0 ] && [ "${TOTAL:-0}" -gt 0 ]; then
             STATUS="PASSED"
@@ -125,6 +96,13 @@ jobs:
           fi
 
           EXECUTED=$((TOTAL - SKIPPED))
+
+          # Calculate pass rate based on executed tests (excluding skipped)
+          if [ "${EXECUTED:-0}" -eq 0 ]; then
+            PASS_RATE="0"
+          else
+            PASS_RATE=$(awk "BEGIN {printf \"%.0f\", ($PASSED/$EXECUTED)*100}")
+          fi
 
           # Icon only if pass rate < 90%
           if awk "BEGIN {exit !(${PASS_RATE} < 90)}"; then
@@ -157,6 +135,30 @@ jobs:
           echo "status=NO RESULTS" >> $GITHUB_OUTPUT
           echo "status_color=warning" >> $GITHUB_OUTPUT
         fi
+        
+        exit 0
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      if: always()
+    
+    - name: Prepare report for GitHub Pages
+      if: always()
+      run: |
+        mkdir -p github-pages-site
+        cp -r playwright-report/* github-pages-site/
+
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      if: always()
+      with:
+        path: github-pages-site/
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      if: always()
+
 
     - name: Add summary
       if: always()
@@ -183,7 +185,12 @@ jobs:
             FAILED=$UNEXPECTED
 
             if [ "$TOTAL" -gt 0 ]; then
-              PASS_RATE=$(awk "BEGIN {printf \"%.1f\", $PASSED * 100 / $TOTAL}")
+              EXECUTED_SUMMARY=$((TOTAL - SKIPPED))
+              if [ "$EXECUTED_SUMMARY" -gt 0 ]; then
+                PASS_RATE=$(awk "BEGIN {printf \"%.1f\", $PASSED * 100 / $EXECUTED_SUMMARY}")
+              else
+                PASS_RATE="0.0"
+              fi
               echo "| **Total** | $TOTAL |"
               echo "| **Passed** | $PASSED |"
               echo "| **Failed** | $FAILED |"
@@ -203,7 +210,7 @@ jobs:
           echo "- Results: **results-#${{ github.run_number }}-${{ inputs.env || 'dev' }}-${{ inputs.project || 'api' }}**"
         } >> "$GITHUB_STEP_SUMMARY"
 
-    - name: Create Slack payload
+    - name: Send Slack notification
       if: always()
       run: |
         cat > slack-payload.json << EOF
@@ -214,21 +221,17 @@ jobs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "${{ steps.test_results.outputs.pass_rate_icon }}*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.executed }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
+                "text": "${{ steps.test_execution.outputs.pass_rate_icon }}*${{ steps.test_execution.outputs.pass_rate }}%* (*${{ steps.test_execution.outputs.passed }}/${{ steps.test_execution.outputs.executed }}*) tests passed (*${{ steps.test_execution.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_execution.outputs.total }}* total | *${{ steps.test_execution.outputs.passed }}* passed | *${{ steps.test_execution.outputs.failed }}* failed | *${{ steps.test_execution.outputs.skipped }}* skipped | *${{ steps.test_execution.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
               }
             }
           ]
         }
         EOF
-
-    - name: Send Slack notification
-      if: always()
-      uses: slackapi/slack-github-action@v1.27.0
-      with:
-        payload-file-path: slack-payload.json
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        
+        # Send notification using curl
+        curl -X POST -H 'Content-type: application/json' \
+          --data @slack-payload.json \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
     - name: Fail job if tests failed
       if: always()
