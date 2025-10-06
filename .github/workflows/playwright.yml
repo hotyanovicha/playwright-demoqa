@@ -203,28 +203,34 @@ jobs:
           echo "- Results: **results-#${{ github.run_number }}-${{ inputs.env || 'dev' }}-${{ inputs.project || 'api' }}**"
         } >> "$GITHUB_STEP_SUMMARY"
 
+    - name: Create Slack payload
+      if: always()
+      run: |
+        cat > slack-payload.json << EOF
+        {
+          "text": "Playwright Test Summary",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "${{ steps.test_results.outputs.pass_rate_icon }}*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.executed }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
+              }
+          ],
+          "attachments": [
+            {
+              "color": "${{ steps.test_results.outputs.status_color }}",
+              "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}% (${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.executed }}) tests passed (${{ steps.test_results.outputs.duration_min }} min)"
+            }
+          ]
+        }
+        EOF
+
     - name: Send Slack notification
       if: always()
       uses: slackapi/slack-github-action@v1.27.0
       with:
-        payload: |
-          {
-            "text": "Playwright Test Summary",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "${{ steps.test_results.outputs.pass_rate_icon }}*${{ steps.test_results.outputs.pass_rate }}%* (*${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}*) tests passed (*${{ steps.test_results.outputs.duration_min }} min*) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }} #${{ github.run_number }}> (<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}|${{ github.ref_name }}>)\n*${{ steps.test_results.outputs.total }}* total | *${{ steps.test_results.outputs.passed }}* passed | *${{ steps.test_results.outputs.failed }}* failed | *${{ steps.test_results.outputs.skipped }}* skipped | *${{ steps.test_results.outputs.flaky }}* flaky | <${{ steps.deployment.outputs.page_url }}|View Test Report>"
-                }
-            ],
-            "attachments": [
-              {
-                "color": "${{ steps.test_results.outputs.status_color }}",
-                "fallback": "Playwright results: ${{ steps.test_results.outputs.pass_rate }}% (${{ steps.test_results.outputs.passed }}/${{ steps.test_results.outputs.total }}) tests passed (${{ steps.test_results.outputs.duration_min }} min)"
-              }
-            ]
-          }
+        payload-file-path: slack-payload.json
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
