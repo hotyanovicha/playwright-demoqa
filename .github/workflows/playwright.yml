@@ -113,10 +113,11 @@ jobs:
           EXECUTED=$((TOTAL - SKIPPED))
 
           # Calculate pass rate based on executed tests (excluding skipped)
+          # Count flaky tests as passed
           if [ "${EXECUTED:-0}" -eq 0 ]; then
             PASS_RATE="0"
           else
-            PASS_RATE=$(awk "BEGIN {printf \"%.0f\", ($PASSED/$EXECUTED)*100}")
+            PASS_RATE=$(awk "BEGIN {printf \"%.0f\", (($PASSED+$FLAKY)/$EXECUTED)*100}")
           fi
 
           # Icon only if pass rate < 90%
@@ -201,7 +202,7 @@ jobs:
             if [ "$TOTAL" -gt 0 ]; then
               EXECUTED_SUMMARY=$((TOTAL - SKIPPED))
               if [ "$EXECUTED_SUMMARY" -gt 0 ]; then
-                PASS_RATE=$(awk "BEGIN {printf \"%.1f\", $PASSED * 100 / $EXECUTED_SUMMARY}")
+                PASS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED + $FLAKY) * 100 / $EXECUTED_SUMMARY}")
               else
                 PASS_RATE="0.0"
               fi
